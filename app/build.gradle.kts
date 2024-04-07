@@ -41,7 +41,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.3"
+        kotlinCompilerExtensionVersion = "1.5.7"
     }
     packaging {
         resources {
@@ -67,7 +67,7 @@ dependencies {
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
-    implementation("no.nordicsemi.android.kotlin.ble:server:1.0.10")
-    implementation("no.nordicsemi.android.kotlin.ble:advertiser:1.0.10")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.0")
+    implementation("no.nordicsemi.android.kotlin.ble:server:1.0.15")
+    implementation("no.nordicsemi.android.kotlin.ble:advertiser:1.0.15")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 }

@@ -1,81 +1,65 @@
 package dev.simonas.ballisticwizard
 
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothManager
-import android.bluetooth.le.BluetoothLeScanner
-import android.content.Context
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.sp
-import androidx.core.app.ActivityCompat
-import androidx.lifecycle.lifecycleScope
-import dev.simonas.ballisticwizard.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 
 class MainActivity : ComponentActivity() {
 
-    val wizard = BallisticWizard(GlobalScope)
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    private val permissionRequest = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-        if (it.values.all { it == true }) {
-            callWizard()
+    private val wizard = BallisticWizard(scope)
+
+    override fun onResume() {
+        super.onResume()
+        startWizard()
+    }
+
+    override fun onPause() {
+        wizard.stopServer()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        wizard.stopServer()
+        super.onDestroy()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            val wizardState = wizard.state.collectAsState()
+            WizardScreen(
+                wizardState
+            )
         }
     }
 
-    private fun callWizard() {
-        val result = wizard.startServer(applicationContext)
+    private fun startWizard() {
+        val result = wizard.startServer(this)
 
         when (result) {
             is BallisticWizard.ServerStartResult.Ok -> {
-                Toast.makeText(this, "Server running", Toast.LENGTH_LONG).show()
+                dlog("Server running")
             }
             is BallisticWizard.ServerStartResult.PermissionRequired -> {
-                Toast.makeText(this, "Needs Bluetooth permissions: ${result.permissions}", Toast.LENGTH_LONG).show()
+                dlog("Needs Bluetooth permissions: ${result.permissions}")
                 permissionRequest.launch(result.permissions.toTypedArray())
             }
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        callWizard()
-
-        setContent {
-            MyApplicationTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val logs = wizard.logsState.collectAsState()
-                    Text(
-                        fontSize = 12.sp,
-                        lineHeight = 12.sp,
-                        text = "Logs:\n" + logs.value.reversed().joinToString("\n"),
-                    )
-                }
-            }
+    private val permissionRequest = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (it.values.all { it == true }) {
+            startWizard()
         }
-    }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    MyApplicationTheme {
-
     }
 }
