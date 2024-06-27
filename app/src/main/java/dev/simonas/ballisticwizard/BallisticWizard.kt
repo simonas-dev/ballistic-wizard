@@ -41,15 +41,6 @@ private const val DATA_1_UUID = "0609d529-b3a9-4d18-ac96-e09a02d14cdf"
 private const val DATA_2_UUID = "315fb3e2-9c5a-4784-8d30-8dddca5b9625"
 private const val DATA_3_UUID = "fd3d3f21-ab45-4f0d-b0c7-de1d392df061"
 
-    public fun CoroutineContext.recursiveCancel(cause: CancellationException? = null) {
-        this[Job]?.children?.forEach {
-            if (it.children.count() > 0) {
-                it.recursiveCancel(cause)
-            }
-            it.cancel(cause)
-        }
-    }
-
 class BallisticWizard(
     private val wizardScope: CoroutineScope,
 ) {
@@ -73,7 +64,7 @@ class BallisticWizard(
             lastServer?.cancelConnection(it)
         }
         lastServer?.stopServer()
-        wizardScope.cancel()
+        _state.value = WizardServiceState.NotStarted
     }
 
     fun startServer(context: Context): ServerStartResult {

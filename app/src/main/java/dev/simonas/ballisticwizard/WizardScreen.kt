@@ -85,8 +85,8 @@ private fun WizardConnected(
 private fun WizardLogs() {
     val logs = LogsRepository.logs.collectAsState()
     Text(
-        fontSize = 12.sp,
-        lineHeight = 12.sp,
+        fontSize = 8.sp,
+        lineHeight = 8.sp,
         text = "Logs:\n" + logs.value.reversed().joinToString("\n"),
     )
 }
